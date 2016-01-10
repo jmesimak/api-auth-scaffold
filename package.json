@@ -1,7 +1,7 @@
 {
   "name": "api-auth-scaffold",
   "version": "0.1.0",
-  "description": "",
+  "description": "Simple REST API scaffold /w authentication and minimal dependencies. ",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
