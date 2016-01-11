@@ -1,3 +1,3 @@
 # NodeJS REST API scaffold 0.1.0
 
-Something small that might be useful when prototyping new ideas.
+Something small that might be useful when prototyping new ideas. Includes a very simple migrate-system.

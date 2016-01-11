@@ -16,10 +16,12 @@ AuthController.prototype.isAuthenticated = function(token) {
   return new Promise((resolve, reject) => {
     db.serialize(() => {
       db.all(`SELECT * from session where token='${token}'`, (err, rows) => {
+        if (err) console.log(err);
         var auth = _.first(rows);
         if (auth) {
           db.serialize(() => {
             db.all(`SELECT id, email FROM user where id=${auth.user}`, (err, rows) => {
+              if (err) console.log(err);
               resolve(_.first(rows));
             });
           });

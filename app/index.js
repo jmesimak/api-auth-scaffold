@@ -32,6 +32,14 @@ function startApp() {
   var uc = new UserController(db);
   var ac = new AuthController(db);
 
+  // CORS
+  app.use(function(req, res, next) {
+    console.log(req.body);
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, access-token");
+    next();
+  });
+
   // Authentication middleware
   app.use((req, res, next) => {
     var token = req.get('access-token') || '';
