@@ -4,7 +4,7 @@ var bcrypt = require('bcrypt');
 var crypto = require('crypto');
 var _ = require('lodash');
 var User = require('../models/User');
-
+var dbAccess = require('../lib/dbAccess');
 
 var AuthController = function(db) {
   this.db = db;
@@ -12,26 +12,22 @@ var AuthController = function(db) {
 
 AuthController.prototype.isAuthenticated = function(token) {
   let db = this.db;
-
-  return new Promise((resolve, reject) => {
-    db.serialize(() => {
-      db.all(`SELECT * from session where token='${token}'`, (err, rows) => {
-        if (err) console.log(err);
-        var auth = _.first(rows);
+  var p = new Promise(function(resolve, reject) {
+    dbAccess
+      .getOne(db, `SELECT * from session where token='${token}'`)
+      .then(function(auth) {
         if (auth) {
-          db.serialize(() => {
-            db.all(`SELECT id, email FROM user where id=${auth.user}`, (err, rows) => {
-              if (err) console.log(err);
-              resolve(_.first(rows));
+          dbAccess
+            .getOne(db, `SELECT id, email FROM user where id=${auth.user}`)
+            .then(function(user) {
+              resolve(user);
             });
-          });
         } else {
           resolve(false);
         }
       });
-    });
   });
-
+  return p;
 }
 
 AuthController.prototype.route = function(app) {
@@ -39,26 +35,25 @@ AuthController.prototype.route = function(app) {
 
   app.route('/login')
     .post((req, res) => {
-      db.serialize(() => {
-        db.all(`SELECT * from user where email='${req.body.email}'`, (err, rows) => {
-          console.log(rows);
-          var user = _.first(rows);
+      dbAccess
+        .getOne(db, `SELECT * from user where email='${req.body.email}'`)
+        .then(function(user) {
           bcrypt.compare(req.body.password, user.password, (err, auth) => {
             if (auth) {
-              db.serialize(() => {
-                crypto.randomBytes(48, function(ex, buf) {
-                  let token = buf.toString('hex');
-                  db.run(`INSERT INTO session VALUES ('${token}', ${user.id})`, (err) => {
+              crypto.randomBytes(48, function(ex, buf) {
+                let token = buf.toString('hex');
+                dbAccess
+                  .insert(db, `INSERT INTO session VALUES ('${token}', ${user.id})`)
+                  .then(function(id) {
+                    console.log(`User ${user.id} has successfully logged in.`);
                     res.json({authenticated: true, accessToken: token});
                   });
-                });
               });
             } else {
               res.status(401).json({error: 'Wrong password'});
             }
           });
         });
-      });
     });
 
   app.route('/logout')
