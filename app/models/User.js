@@ -20,11 +20,11 @@ User.prototype.create = function(db) {
           if (id) {
             crypto.randomBytes(48, function(ex, buf) {
               let token = buf.toString('hex');
-              db.serialize(() => {
-                db.run(`INSERT INTO session VALUES ('${token}', ${id})`, (err) => {
+              dbAccess
+                .insert(`INSERT INTO session VALUES ('${token}', ${id})`)
+                .then(function(id) {
                   resolve({authenticated: true, accessToken: token});
                 });
-              })
             });
           } else {
             reject(false);
