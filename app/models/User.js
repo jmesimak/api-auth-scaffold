@@ -21,7 +21,7 @@ User.prototype.create = function(db) {
             crypto.randomBytes(48, function(ex, buf) {
               let token = buf.toString('hex');
               dbAccess
-                .insert(`INSERT INTO session VALUES ('${token}', ${id})`)
+                .insert(db, `INSERT INTO session VALUES ('${token}', ${id})`)
                 .then(function(id) {
                   resolve({authenticated: true, accessToken: token});
                 });

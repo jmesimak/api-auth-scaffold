@@ -4,27 +4,47 @@ var express = require('express');
 var app = express();
 var bodyParser = require('body-parser')
 var fs = require('fs');
+var events = require('events');
+var eventEmitter = new events.EventEmitter();
+var server;
+
+eventEmitter.on('start', function() {
+  console.log('READY!');
+});
+
 app.use( bodyParser.json());
 
 var sqlite3 = require('sqlite3').verbose();
 var db = new sqlite3.Database(':memory:');
 
 var items = fs.readdirSync(__dirname + '/migrations');
+
 function migrateFile(index) {
   console.log(`Migrating nr. ${index}`);
   var migration = require(`./migrations/${index}.js`);
   migration.ups(db)
-    .then(() => {
+    .then(function() {
       if (index < items.length) {
         migrateFile(index+1);
       } else {
         console.log('Starting');
-        startApp();
+        startApp()
+          .then(function(s) {
+            console.log('ebens');
+            eventEmitter.emit('start');
+          });
       }
     });
 }
 
 migrateFile(1);
+// migrateFile(1)
+//   .then(function(s) {
+//     server = server;
+//     eventEmitter.emit('start');
+//     console.log('should be up');
+//   });
+
 
 function startApp() {
   var UserController = require('./controllers/UserController');
@@ -34,7 +54,6 @@ function startApp() {
 
   // CORS
   app.use(function(req, res, next) {
-    console.log(req.body);
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, access-token");
     next();
@@ -64,7 +83,20 @@ function startApp() {
   uc.route(app);
   ac.route(app);
 
-  app.listen(3000, function () {
+  var s = app.listen(3000, function () {
     console.log('Example app listening on port 3000!');
+    server = s;
+    eventEmitter.emit('start');
   });
 }
+
+function getServer() {
+  return server;
+}
+
+var ret = {
+  serverStart: eventEmitter,
+  getServer: getServer
+};
+
+module.exports = ret;

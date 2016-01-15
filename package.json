@@ -4,7 +4,7 @@
   "description": "Simple REST API scaffold /w authentication and minimal dependencies. ",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "./node_modules/mocha/bin/mocha -R spec test/spec.js"
   },
   "keywords": [],
   "author": "jmesimak",
@@ -14,6 +14,9 @@
     "body-parser": "^1.14.2",
     "express": "^4.13.3",
     "lodash": "^3.10.1",
-    "sqlite3": "^3.1.1"
+    "mocha": "^2.3.4",
+    "should": "^8.1.1",
+    "sqlite3": "^3.1.1",
+    "supertest": "^1.1.0"
   }
 }
