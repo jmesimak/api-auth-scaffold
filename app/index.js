@@ -47,50 +47,47 @@ migrateFile(1);
 
 
 function startApp() {
-  var p = new Promise(function(resolve, reject) {
-    var UserController = require('./controllers/UserController');
-    var AuthController = require('./controllers/AuthController');
-    var uc = new UserController(db);
-    var ac = new AuthController(db);
+  var UserController = require('./controllers/UserController');
+  var AuthController = require('./controllers/AuthController');
+  var uc = new UserController(db);
+  var ac = new AuthController(db);
 
-    // CORS
-    app.use(function(req, res, next) {
-      res.header("Access-Control-Allow-Origin", "*");
-      res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, access-token");
-      next();
-    });
-
-    // Authentication middleware
-    app.use((req, res, next) => {
-      var token = req.get('access-token') || '';
-
-      if (token) {
-        ac.isAuthenticated(token)
-          .then((user) => {
-            if (user) {
-              req.user = user;
-              next();
-            } else {
-              req.user = undefined;
-              console.log(`Invalid token ${token}`);
-              next();
-            }
-          });
-      } else {
-        next();
-      }
-    });
-
-    uc.route(app);
-    ac.route(app);
-
-    var s = app.listen(3000, function () {
-      console.log('Example app listening on port 3000!');
-      server = s;
-      resolve(server);
-    });
+  // CORS
+  app.use(function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, access-token");
+    next();
   });
-  return p;
+
+  // Authentication middleware
+  app.use((req, res, next) => {
+    var token = req.get('access-token') || '';
+
+    if (token) {
+      ac.isAuthenticated(token)
+        .then((user) => {
+          if (user) {
+            req.user = user;
+            next();
+          } else {
+            req.user = undefined;
+            console.log(`Invalid token ${token}`);
+            next();
+          }
+        });
+    } else {
+      next();
+    }
+  });
+
+  uc.route(app);
+  ac.route(app);
+
+  var s = app.listen(3000, function () {
+    console.log('Example app listening on port 3000!');
+    server = s;
+    eventEmitter.emit('start');
+  });
 }
 
 function getServer() {
